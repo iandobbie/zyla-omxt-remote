@@ -1,0 +1,29 @@
+# The Andor directories we have here are for 64-bit libraries. To build
+# 64-bit, you need to be using the Visual Studio 2008 installed on the OMX
+# cockpit computer (upstairs), since only the non-free VS2008 has a functional
+# 64-bit compiler. Remember to do "vcvarsall.bat amd64" to enable that 
+# compiler from the VS2008 command line.
+#
+# This makefile is for the pure-C control program, which we don't normally use.
+
+BOOSTROOT = "C:\boost_1_46_1"
+
+ANDORLIBS = "Andor SDK3\atcorem.lib"
+BOOSTINCLUDE = "/I$(BOOSTROOT)"
+BOOSTLIBS = "/LIBPATH:$(BOOSTROOT)\stage\lib" "/LIBPATH:$(BOOSTROOT)\stage\Other libraries"
+LIBS = $(ANDORLIBS) $(BOOSTLIBS)
+
+CXXFLAGS = /MD /EHsc /DWIN32 /D_WINDOWS /DNOPCH /O2 $(BOOSTINCLUDE)
+
+OBJS = cClient.obj
+
+TARGET = cClient.exe
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+    link /DEBUG /NOLOGO /out:$@ /SUBSYSTEM:CONSOLE $(OBJS) $(LIBS)
+    mt.exe -manifest $(TARGET).manifest -outputresource:$(TARGET);1
+
+clean:
+    del *ilk *lib *pdb *obj *exp *wrap.cxx *pyd *pyd.manifest *exe

@@ -1,0 +1,44 @@
+# The Andor directories we have here are for 64-bit libraries. To build
+# 64-bit, you need to be using the Visual Studio 2008 installed on the OMX
+# cockpit computer (upstairs), since only the non-free VS2008 has a functional
+# 64-bit compiler. Remember to do "vcvarsall.bat amd64" to enable that 
+# compiler from the VS2008 command line.
+
+BOOSTROOT = C:\boost_1_46_1
+BOOSTINCLUDE = "/I$(BOOSTROOT)"
+BOOSTLIBS = "/LIBPATH:$(BOOSTROOT)\stage\lib" "/LIBPATH:$(BOOSTROOT)\stage\Other libraries"
+
+PYROOT = C:\Python27x64
+PYINCLUDE = /I$(PYROOT)\include /I$(PYROOT)\Lib\site-packages\numpy\core\include
+PYLIBS = /LIBPATH:$(PYROOT)\libs python27.lib
+
+ANDORLIBS = "Andor SDK3\atcorem.lib"
+
+LIBS = $(PYLIBS) $(ANDORLIBS) $(BOOSTLIBS)
+
+CXXFLAGS = /MD /EHsc /DWIN32 /D_WINDOWS /DNOPCH /O2 $(PYINCLUDE) $(BOOSTINCLUDE)
+
+# We have one SWIG library here and one traditional DLL (because going through
+# SWIG for the high-throughput parts of Andor's API causes problems, so we
+# just use ctypes).
+ANDOROBJS = neo_wrap.obj
+MEMOBJS = memhandler.obj
+
+ANDORTARGET = _neo.pyd
+MEMTARGET = memhandler.dll
+
+all: $(ANDORTARGET) $(MEMTARGET)
+
+$(ANDORTARGET): $(ANDOROBJS)
+    link /dll /DEBUG /NOLOGO /out:$@ /SUBSYSTEM:WINDOWS $(ANDOROBJS) $(LIBS)
+
+$(MEMTARGET): $(MEMOBJS)
+    link /dll /DEBUG /NOLOGO /out:$@ /SUBSYSTEM:WINDOWS $(MEMOBJS) $(LIBS)
+    mt.exe -manifest memhandler.dll.manifest -outputresource:memhandler.dll;2
+
+swig:
+    C:\swigwin-2.0.4\swig.exe -c++ -python neo.i
+    
+
+clean:
+    del *ilk *lib *pdb *obj *exp *wrap.cxx *pyd *pyd.manifest
